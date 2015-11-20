@@ -1,6 +1,6 @@
 #XCGLoggerNSLoggerConnector
 #####By: Markus Winkler
-- Twitter: [@DaveWoodX](https://twitter.com/creativegun)
+- Twitter: [@CreativeGun](https://twitter.com/creativegun)
 
 ###tl;dr
 Adds NSLogger support (with images) to XCGLogger.

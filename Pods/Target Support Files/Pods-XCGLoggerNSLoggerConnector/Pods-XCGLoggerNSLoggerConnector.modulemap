@@ -1,0 +1,6 @@
+framework module Pods_XCGLoggerNSLoggerConnector {
+  umbrella header "Pods-XCGLoggerNSLoggerConnector-umbrella.h"
+
+  export *
+  module * { export * }
+}

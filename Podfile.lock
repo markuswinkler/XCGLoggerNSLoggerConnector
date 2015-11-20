@@ -1,0 +1,15 @@
+PODS:
+  - NSLogger (1.5.1):
+    - NSLogger/Standard (= 1.5.1)
+  - NSLogger/Standard (1.5.1)
+  - XCGLogger (3.1.1)
+
+DEPENDENCIES:
+  - NSLogger (~> 1.5.0)
+  - XCGLogger (~> 3.1)
+
+SPEC CHECKSUMS:
+  NSLogger: 5ed223a2436df96244e033be750656dacdeec034
+  XCGLogger: e111a313f609432394c3ae378d99511634fd2e3c
+
+COCOAPODS: 0.39.0

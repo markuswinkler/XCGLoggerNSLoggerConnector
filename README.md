@@ -62,5 +62,5 @@ NSLogger: https://github.com/fpillet/NSLogger
 
 ###Change Log
 
-* **Version 0.1.0**: *(2015/11/20)* - Initial Release
+* **Version 0.1.1**: *(2015/11/20)* - Initial Release
 

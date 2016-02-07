@@ -61,7 +61,8 @@ public class XCGNSLoggerLogDestination: XCGBaseLogDestination {
             fileName = last
         }
 
-        LogMessage_va(logDetails.logLevel.description, convertLogLevel(logDetails.logLevel), "[\(fileName):\(logDetails.lineNumber)] -> \(logDetails.functionName) : \(logDetails.logMessage)",getVaList([]))
+//        LogMessage_va(logDetails.logLevel.description, convertLogLevel(logDetails.logLevel), "[\(fileName):\(logDetails.lineNumber)] -> \(logDetails.functionName) : \(logDetails.logMessage)",getVaList([]))
+        LogMessageF_va(logDetails.fileName, Int32(logDetails.lineNumber), logDetails.functionName, logDetails.logLevel.description, Int32(convertLogLevel(logDetails.logLevel)), logDetails.logMessage, getVaList([]))
     }
 }
 
@@ -108,7 +109,8 @@ public extension XCGLogger {
         let level = LogLevel.None
         if let image: UIImage = closure() {
             LogImageData(label, convertLogLevel(level), Int32(image.size.width), Int32(image.size.height), UIImagePNGRepresentation(image))
-            LogMessage_va(label, convertLogLevel(level), "[\(fileName2):\(lineNumber)] -> \(functionName) : \(image)",getVaList([]))
+//            LogMessage_va(label, convertLogLevel(level), "[\(fileName2):\(lineNumber)] -> \(functionName) : \(image)",getVaList([]))
+            LogMessageF_va(fileName, Int32(lineNumber), functionName, label, Int32(convertLogLevel(level)), "\(image)", getVaList([]))
             self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "Image: \(image)"})
         }
         else {
@@ -125,12 +127,14 @@ public extension XCGLogger {
         }
 
         if let message = closure() {
-            LogMessage_va(label, convertLogLevel(level), "[\(fileName2):\(lineNumber)] -> \(functionName) : \(message)",getVaList([]))
+//            LogMessage_va(label, convertLogLevel(level), "[\(fileName2):\(lineNumber)] -> \(functionName) : \(message)",getVaList([]))
+            LogMessageF_va(fileName, Int32(lineNumber), functionName, label, Int32(convertLogLevel(level)), "\(message)", getVaList([]))
             self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "[\(label)] \(message)"})
         }
         else
         {
-            LogMessage_va(label, convertLogLevel(level), "[\(fileName2):\(lineNumber)] -> \(functionName) : nil",getVaList([]))
+//            LogMessage_va(label, convertLogLevel(level), "[\(fileName2):\(lineNumber)] -> \(functionName) : nil",getVaList([]))
+            LogMessageF_va(fileName, Int32(lineNumber), functionName, label, Int32(convertLogLevel(level)), "nil", getVaList([]))
             self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "[\(label)] nil"})
         }
     }

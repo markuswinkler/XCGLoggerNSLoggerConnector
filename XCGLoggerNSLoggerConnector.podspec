@@ -20,11 +20,11 @@ Pod::Spec.new do |s|
 #Adds NSLogger support (with images) to XCGLogger.
 #                       DESC
 
-  s.homepage         = "https://github.com/briancordanyoung/XCGLoggerNSLoggerConnector"
+  s.homepage         = "https://github.com/markuswinkler/XCGLoggerNSLoggerConnector"
   # s.screenshots     = "www.example.com/screenshots_1", "www.example.com/screenshots_2"
   s.license = { :type => "MIT", :file => "LICENSE" }
   s.author           = { "Markus Winkler" => "markus@markuswinkler.com" }
-  s.source           = { :git => "https://github.com/briancordanyoung/XCGLoggerNSLoggerConnector.git", :tag => "#{s.version}" }
+  s.source           = { :git => "https://github.com/markuswinkler/XCGLoggerNSLoggerConnector.git", :tag => "#{s.version}" }
   s.social_media_url = 'https://twitter.com/creativegun'
 
   s.platform     = :ios, '8.0'

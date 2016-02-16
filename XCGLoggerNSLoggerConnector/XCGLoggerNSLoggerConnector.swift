@@ -3,7 +3,7 @@
 //  adds support for NSLogger in XCGLogger
 //
 //  add the line below to the init code in appDelegate
-//  log.addLogDestination(XCGNSLoggerLogDestination(owner: log, identifier: "nslogger.identifier"))
+//  log.addLogDestination(XCGNSLoggerLogDestination(owner: log, identifier: "nslogger.identifier", addInlineDebugInfo: false))
 //
 //  New custom image level, accepts UIImage
 //  Label is default set to "image", can be used to indicate e.g. source ("facebook", "imgur")
@@ -24,7 +24,11 @@ import XCGLogger
 import NSLogger
 
 public class XCGNSLoggerLogDestination: XCGBaseLogDestination {
-
+    
+    // use this variable to show file/functioname in the same line with the message
+    // (just a personal preference, let me see the flow of the application better)
+    public var addInlineDebugInfo: Bool = false
+    
     // Report levels are different in NSLogger (0 = most important, 4 = least important)
     // XCGLogger level needs to be converted to use the bonjour app filtering in a meaningful way
     private func convertLogLevel(level:XCGLogger.LogLevel) -> Int32 {
@@ -45,23 +49,27 @@ public class XCGNSLoggerLogDestination: XCGBaseLogDestination {
             return 3
         }
     }
-
+    
+    public init(owner: XCGLogger, identifier: String, addInlineDebugInfo: Bool = false) {
+        super.init(owner: owner, identifier: identifier)
+        self.addInlineDebugInfo = addInlineDebugInfo
+    }
+    
     public override func output(logDetails: XCGLogDetails, text: String) {
-
+        
         switch(logDetails.logLevel) {
         case .None:
             return
         default:
             break
         }
-
-        var arr = logDetails.fileName.componentsSeparatedByString("/")
-        var fileName = logDetails.fileName
-        if let last = arr.popLast() {
-            fileName = last
+        
+        if addInlineDebugInfo {
+            LogMessageF_va(logDetails.fileName, Int32(logDetails.lineNumber), logDetails.functionName, logDetails.logLevel.description, Int32(convertLogLevel(logDetails.logLevel)), "[\(NSString(string: logDetails.fileName).lastPathComponent):\(logDetails.lineNumber)] -> \(logDetails.functionName) : \(logDetails.logMessage)", getVaList([]))
+        } else {
+            LogMessageF_va(logDetails.fileName, Int32(logDetails.lineNumber), logDetails.functionName, logDetails.logLevel.description, Int32(convertLogLevel(logDetails.logLevel)), logDetails.logMessage, getVaList([]))
         }
-
-        LogMessageF_va(logDetails.fileName, Int32(logDetails.lineNumber), logDetails.functionName, logDetails.logLevel.description, Int32(convertLogLevel(logDetails.logLevel)), logDetails.logMessage, getVaList([]))
+        
     }
 }
 

@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = "XCGLoggerNSLoggerConnector"
-  s.version          = "0.1.1"
+  s.version          = "0.1.2"
   s.summary          = "Adds NSLogger support (with images) to XCGLogger."
 
 # This description is used to generate tags and improve search results.
@@ -32,8 +32,8 @@ Pod::Spec.new do |s|
 
   s.source_files = 'XCGLoggerNSLoggerConnector/**/*.{swift}'
 
-  s.dependency 'XCGLogger', '~> 3.1.1'
-  s.dependency 'NSLogger', '~> 1.5.0'
+  s.dependency 'XCGLogger', '>= 3.1.1'
+  s.dependency 'NSLogger', '>= 1.5.0'
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.framework = 'UIKit'

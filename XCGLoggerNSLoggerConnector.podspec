@@ -8,8 +8,8 @@
 
 Pod::Spec.new do |s|
   s.name             = "XCGLoggerNSLoggerConnector"
-  s.version          = "0.1.2"
-  s.summary          = "Adds NSLogger support (with images) to XCGLogger."
+  s.version          = "0.1.3"
+  s.summary          = "fix for new swift syntax"
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?

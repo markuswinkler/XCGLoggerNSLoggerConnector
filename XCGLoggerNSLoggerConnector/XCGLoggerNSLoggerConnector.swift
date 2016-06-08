@@ -95,7 +95,7 @@ public extension XCGLogger {
         }
     }
 
-    private func sendImageToNSLogger(image: UIImage?, level: LogLevel, label: String, functionName: String = __FUNCTION__, fileName: String = __FILE__, lineNumber: Int = __LINE__) {
+    private func sendImageToNSLogger(image: UIImage?, level: LogLevel, label: String, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         // check if image is valid, otherwise display error
         if let image: UIImage = image {
             LogImageDataF(fileName, Int32(lineNumber), functionName, label, convertLogLevel(level), Int32(image.size.width), Int32(image.size.height), UIImagePNGRepresentation(image))
@@ -106,7 +106,7 @@ public extension XCGLogger {
         }
     }
 
-    public func customLabel(@autoclosure closure: () -> UIImage?, label: String = "image", functionName: String = __FUNCTION__, fileName: String = __FILE__, lineNumber: Int = __LINE__) {
+    public func customLabel(@autoclosure closure: () -> UIImage?, label: String = "image", functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         // check if image is valid, otherwise display error
         var arr = fileName.componentsSeparatedByString("/")
         var fileName2 = fileName
@@ -124,7 +124,7 @@ public extension XCGLogger {
         }
     }
 
-    public func customLabel(@autoclosure closure: () -> String?, label: String = "string", functionName: String = __FUNCTION__, fileName: String = __FILE__, lineNumber: Int = __LINE__) {
+    public func customLabel(@autoclosure closure: () -> String?, label: String = "string", functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = LogLevel.None
         var arr = fileName.componentsSeparatedByString("/")
         var fileName2 = fileName
@@ -143,32 +143,32 @@ public extension XCGLogger {
         }
     }
 
-    public func verbose(@autoclosure closure: () -> UIImage?, functionName: String = __FUNCTION__, fileName: String = __FILE__, lineNumber: Int = __LINE__) {
+    public func verbose(@autoclosure closure: () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = LogLevel.Verbose
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
 
-    public func debug(@autoclosure closure: () -> UIImage?, functionName: String = __FUNCTION__, fileName: String = __FILE__, lineNumber: Int = __LINE__) {
+    public func debug(@autoclosure closure: () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = LogLevel.Debug
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
 
-    public func info(@autoclosure closure: () -> UIImage?, functionName: String = __FUNCTION__, fileName: String = __FILE__, lineNumber: Int = __LINE__) {
+    public func info(@autoclosure closure: () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = LogLevel.Info
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
 
-    public func warning(@autoclosure closure: () -> UIImage?, functionName: String = __FUNCTION__, fileName: String = __FILE__, lineNumber: Int = __LINE__) {
+    public func warning(@autoclosure closure: () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = LogLevel.Warning
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
 
-    public func error(@autoclosure closure: () -> UIImage?, functionName: String = __FUNCTION__, fileName: String = __FILE__, lineNumber: Int = __LINE__) {
+    public func error(@autoclosure closure: () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = LogLevel.Error
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
 
-    public func severe(@autoclosure closure: () -> UIImage?, functionName: String = __FUNCTION__, fileName: String = __FILE__, lineNumber: Int = __LINE__) {
+    public func severe(@autoclosure closure: () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = LogLevel.Severe
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }

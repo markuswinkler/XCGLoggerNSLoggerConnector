@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = "XCGLoggerNSLoggerConnector"
-  s.version          = "0.1.3"
+  s.version          = "0.1.4"
   s.summary          = "fix for new swift syntax"
 
 # This description is used to generate tags and improve search results.
@@ -32,7 +32,7 @@ Pod::Spec.new do |s|
 
   s.source_files = 'XCGLoggerNSLoggerConnector/**/*.{swift}'
 
-  s.dependency 'XCGLogger', '~> 3.1'
+  s.dependency 'XCGLogger', '>= 3.1', '<= 3.3'
   s.dependency 'NSLogger', '~> 1.5'
 
   # s.public_header_files = 'Pod/Classes/**/*.h'

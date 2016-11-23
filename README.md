@@ -26,12 +26,16 @@ let log: XCGLogger = {
     // only log to the external window
     LoggerSetOptions(LoggerGetDefaultLogger(), UInt32( kLoggerOption_BufferLogsUntilConnection | kLoggerOption_BrowseBonjour | kLoggerOption_BrowseOnlyLocalDomain ))
     LoggerStart(LoggerGetDefaultLogger())
-    log.addLogDestination(XCGNSLoggerLogDestination(owner: log, identifier: "nslogger.identifier"))
+    log.add(destination: XCGNSLoggerLogDestination(owner: log, identifier: "nslogger.identifier"))
 
     return log
 }()
 ```
 
+You can also specify to display inline the file & function name (personal preference, makes it slightly easier to read where the call is coming from).
+```
+    log.add(destination: XCGNSLoggerLogDestination(owner: log, identifier: "nslogger.identifier", addInlineDebugInfo: true))
+```
 
 Now all levels accept an UIImage as a parameter and will output the content to the NSLogger window as an image.
 
@@ -61,6 +65,9 @@ XCGLogger: https://github.com/DaveWoodCom/XCGLogger
 NSLogger: https://github.com/fpillet/NSLogger  
 
 ###Change Log
-
+* **Version 0.2.0**: *(2016/11/23)* - Update for Swift 3
+* **Version 0.1.4**: *(2016/08/23)* - fixes
+* **Version 0.1.3**: *(2016/06/08)* - fixes
+* **Version 0.1.2**: *(2016/02/15)* - added a switch to display additional debug info inline
 * **Version 0.1.1**: *(2015/11/20)* - Initial Release
 

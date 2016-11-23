@@ -9,17 +9,17 @@
 /* Begin PBXBuildFile section */
 		286534CA1BFEE073000BF715 /* XCGLoggerNSLoggerConnector.h in Headers */ = {isa = PBXBuildFile; fileRef = 286534C91BFEE073000BF715 /* XCGLoggerNSLoggerConnector.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		286534D21BFEE77D000BF715 /* XCGLoggerNSLoggerConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 286534D11BFEE77D000BF715 /* XCGLoggerNSLoggerConnector.swift */; };
-		8DF4DE29F7896A7787172112 /* Pods_XCGLoggerNSLoggerConnector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CDA71401EA7BB279C24A82A /* Pods_XCGLoggerNSLoggerConnector.framework */; };
+		D56FFECECC0FBF0FF16F6A59 /* Pods_XCGLoggerNSLoggerConnector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D222CCF4D0AA702D74ADBB3A /* Pods_XCGLoggerNSLoggerConnector.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0854D52AE88E2ECC6B472329 /* Pods-XCGLoggerNSLoggerConnector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-XCGLoggerNSLoggerConnector.release.xcconfig"; path = "Pods/Target Support Files/Pods-XCGLoggerNSLoggerConnector/Pods-XCGLoggerNSLoggerConnector.release.xcconfig"; sourceTree = "<group>"; };
 		286534C61BFEE073000BF715 /* XCGLoggerNSLoggerConnector.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = XCGLoggerNSLoggerConnector.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		286534C91BFEE073000BF715 /* XCGLoggerNSLoggerConnector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XCGLoggerNSLoggerConnector.h; sourceTree = "<group>"; };
 		286534CB1BFEE073000BF715 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		286534D11BFEE77D000BF715 /* XCGLoggerNSLoggerConnector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCGLoggerNSLoggerConnector.swift; sourceTree = "<group>"; };
-		53EF46E6C1AAE8F372CBDED8 /* Pods-XCGLoggerNSLoggerConnector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-XCGLoggerNSLoggerConnector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-XCGLoggerNSLoggerConnector/Pods-XCGLoggerNSLoggerConnector.debug.xcconfig"; sourceTree = "<group>"; };
-		7CDA71401EA7BB279C24A82A /* Pods_XCGLoggerNSLoggerConnector.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_XCGLoggerNSLoggerConnector.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		31C10533FB4F4F2B36B4EFC1 /* Pods-XCGLoggerNSLoggerConnector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-XCGLoggerNSLoggerConnector.release.xcconfig"; path = "Pods/Target Support Files/Pods-XCGLoggerNSLoggerConnector/Pods-XCGLoggerNSLoggerConnector.release.xcconfig"; sourceTree = "<group>"; };
+		814FA145B9FE1C951C68BE17 /* Pods-XCGLoggerNSLoggerConnector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-XCGLoggerNSLoggerConnector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-XCGLoggerNSLoggerConnector/Pods-XCGLoggerNSLoggerConnector.debug.xcconfig"; sourceTree = "<group>"; };
+		D222CCF4D0AA702D74ADBB3A /* Pods_XCGLoggerNSLoggerConnector.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_XCGLoggerNSLoggerConnector.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DF4DE29F7896A7787172112 /* Pods_XCGLoggerNSLoggerConnector.framework in Frameworks */,
+				D56FFECECC0FBF0FF16F6A59 /* Pods_XCGLoggerNSLoggerConnector.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -39,8 +39,8 @@
 			children = (
 				286534C81BFEE073000BF715 /* XCGLoggerNSLoggerConnector */,
 				286534C71BFEE073000BF715 /* Products */,
-				CBE041739A5389AC4EDF1726 /* Pods */,
-				513E9B7EF62D3B6F47AC71B5 /* Frameworks */,
+				B7AD4BF7929296AC5B15CB1B /* Pods */,
+				A4A1C610B802D12458DEB9F9 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -62,19 +62,19 @@
 			path = XCGLoggerNSLoggerConnector;
 			sourceTree = "<group>";
 		};
-		513E9B7EF62D3B6F47AC71B5 /* Frameworks */ = {
+		A4A1C610B802D12458DEB9F9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				7CDA71401EA7BB279C24A82A /* Pods_XCGLoggerNSLoggerConnector.framework */,
+				D222CCF4D0AA702D74ADBB3A /* Pods_XCGLoggerNSLoggerConnector.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		CBE041739A5389AC4EDF1726 /* Pods */ = {
+		B7AD4BF7929296AC5B15CB1B /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				53EF46E6C1AAE8F372CBDED8 /* Pods-XCGLoggerNSLoggerConnector.debug.xcconfig */,
-				0854D52AE88E2ECC6B472329 /* Pods-XCGLoggerNSLoggerConnector.release.xcconfig */,
+				814FA145B9FE1C951C68BE17 /* Pods-XCGLoggerNSLoggerConnector.debug.xcconfig */,
+				31C10533FB4F4F2B36B4EFC1 /* Pods-XCGLoggerNSLoggerConnector.release.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -97,12 +97,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 286534CE1BFEE073000BF715 /* Build configuration list for PBXNativeTarget "XCGLoggerNSLoggerConnector" */;
 			buildPhases = (
-				62C362A26C263B440E0352C8 /* Check Pods Manifest.lock */,
+				A600A1575AC3D3419D24E5C5 /* [CP] Check Pods Manifest.lock */,
 				286534C11BFEE073000BF715 /* Sources */,
 				286534C21BFEE073000BF715 /* Frameworks */,
 				286534C31BFEE073000BF715 /* Headers */,
 				286534C41BFEE073000BF715 /* Resources */,
-				B41BA94E5EA71DE8DF9C9191 /* Copy Pods Resources */,
+				8118366B0C938F6F242DC97C /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -155,34 +155,34 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		62C362A26C263B440E0352C8 /* Check Pods Manifest.lock */ = {
+		8118366B0C938F6F242DC97C /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		B41BA94E5EA71DE8DF9C9191 /* Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Pods Resources";
+			name = "[CP] Copy Pods Resources";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-XCGLoggerNSLoggerConnector/Pods-XCGLoggerNSLoggerConnector-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		A600A1575AC3D3419D24E5C5 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -290,7 +290,7 @@
 		};
 		286534CF1BFEE073000BF715 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 53EF46E6C1AAE8F372CBDED8 /* Pods-XCGLoggerNSLoggerConnector.debug.xcconfig */;
+			baseConfigurationReference = 814FA145B9FE1C951C68BE17 /* Pods-XCGLoggerNSLoggerConnector.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
@@ -309,7 +309,7 @@
 		};
 		286534D01BFEE073000BF715 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0854D52AE88E2ECC6B472329 /* Pods-XCGLoggerNSLoggerConnector.release.xcconfig */;
+			baseConfigurationReference = 31C10533FB4F4F2B36B4EFC1 /* Pods-XCGLoggerNSLoggerConnector.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;

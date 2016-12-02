@@ -124,6 +124,7 @@
 				TargetAttributes = {
 					286534C51BFEE073000BF715 = {
 						CreatedOnToolsVersion = 7.1;
+						LastSwiftMigration = 0810;
 					};
 				};
 			};
@@ -304,6 +305,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -322,6 +324,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.markuswinkler.XCGLoggerNSLoggerConnector;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};

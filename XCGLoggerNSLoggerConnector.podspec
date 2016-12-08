@@ -8,8 +8,8 @@
 
 Pod::Spec.new do |s|
   s.name             = "XCGLoggerNSLoggerConnector"
-  s.version          = "0.2.0"
-  s.summary          = "update for Swift 3"
+  s.version          = "0.3.0"
+  s.summary          = "update for XCode 8.1"
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
   s.source           = { :git => "https://github.com/markuswinkler/XCGLoggerNSLoggerConnector.git", :tag => "#{s.version}" }
   s.social_media_url = 'https://twitter.com/creativegun'
 
-  s.platform     = :ios, '8.0'
+  s.platform     = :ios, '9.0'
   s.requires_arc = true
 
   s.source_files = 'XCGLoggerNSLoggerConnector/**/*.{swift}'

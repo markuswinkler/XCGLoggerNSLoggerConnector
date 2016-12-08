@@ -11,7 +11,7 @@ Adds NSLogger support (with images) to XCGLogger.
 
 ###Compatibility
 
-XCGLoggerNSLoggerConnector works in both iOS and OS X projects. It is a Swift library intended for use in Swift projects.
+XCGLoggerNSLoggerConnector works for iOS projects. It is a Swift library intended for use in Swift projects.
 
 ###How to Use
 

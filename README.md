@@ -1,3 +1,7 @@
+[![Version](https://img.shields.io/cocoapods/v/XCGLoggerNSLoggerConnector.svg?style=flat)](https://cocoapods.org/pods/XCGLoggerNSLoggerConnector)
+[![License](https://img.shields.io/cocoapods/l/XCGLoggerNSLoggerConnector.svg?style=flat)](https://cocoapods.org/pods/XCGLoggerNSLoggerConnector)
+[![Platform](https://img.shields.io/cocoapods/p/XCGLoggerNSLoggerConnector.svg?style=flat)](https://cocoapods.org/pods/XCGLoggerNSLoggerConnector)
+
 #XCGLoggerNSLoggerConnector
 #####By: Markus Winkler
 - Twitter: [@CreativeGun](https://twitter.com/creativegun)

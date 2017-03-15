@@ -1,5 +1,5 @@
 #Change Log
-
+* **Version 0.3.1**: *(2016/12/08)* - removed 2 compiler warnings
 * **Version 0.3.0**: *(2016/12/08)* - Xcode 8.1 support. Upgrade to iOS 9.
 * **Version 0.2.0**: *(2016/11/23)* - Update for Swift 3
 * **Version 0.1.4**: *(2016/08/23)* - added XCGLogger limit <= 3.3 since any version above will break this connector

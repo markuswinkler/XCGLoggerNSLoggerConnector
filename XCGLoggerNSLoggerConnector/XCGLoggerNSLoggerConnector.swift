@@ -102,7 +102,7 @@ public extension XCGLogger {
             self.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, closure: {return "Image: \(image)"})
         }
         else {
-            self.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, closure: {return "Invalid Image: \(image)"})
+            self.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, closure: {return "Invalid Image: \(String(describing: image))"})
         }
     }
 
@@ -120,7 +120,7 @@ public extension XCGLogger {
             self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "Image: \(image)"})
         }
         else {
-            self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "Invalid Image: \(closure())"})
+            self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "Invalid Image: \(String(describing: closure()))"})
         }
     }
 

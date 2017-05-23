@@ -8,8 +8,8 @@
 
 Pod::Spec.new do |s|
   s.name             = "XCGLoggerNSLoggerConnector"
-  s.version          = "0.3.1"
-  s.summary          = "update for XCode 8.1"
+  s.version          = "0.3.2"
+  s.summary          = "Updated first parameter of XCGLogger extension functions in order to override correctly the updated XCGLogger version"
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?

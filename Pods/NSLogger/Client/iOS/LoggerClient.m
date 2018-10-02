@@ -1,7 +1,7 @@
 /*
  * LoggerClient.m
  *
- * version 1.7.0 23-MAY-2016
+ * version 1.9.0 25-FEB-2018
  *
  * Main implementation of the NSLogger client side code
  * Part of NSLogger (client side)
@@ -9,7 +9,7 @@
  *
  * BSD license follows (http://www.opensource.org/licenses/bsd-license.php)
  * 
- * Copyright (c) 2010-2016 Florent Pillet All Rights Reserved.
+ * Copyright (c) 2010-2018 Florent Pillet All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -130,7 +130,7 @@ struct Logger
 	CFMutableArrayRef bonjourServices;              // Services being tried
 	NSNetServiceBrowser *bonjourDomainBrowser;      // Domain browser
 	CFMutableArrayRef logQueue;                     // Message queue
-	pthread_mutex_t logQueueMutex;
+	pthread_mutex_t logQueueMutex;					// A mutex we use to protect access to the log queue and some critical variables
 	pthread_cond_t logQueueEmpty;
 	
 	dispatch_once_t workerThreadInit;               // Use this to ensure creation of the worker thread is ever done only once for a given logger
@@ -178,6 +178,7 @@ static void LoggerStopBonjourBrowsing(Logger *logger);
 static void LoggerBrowseBonjourForServices(Logger *logger, CFStringRef domainName);
 static void LoggerConnectToService(Logger *logger, NSNetService *service);
 static void LoggerDisconnectFromService(Logger *logger, NSNetService *service);
+
 @interface FPLLoggerBonjourDelegate : NSObject <NSNetServiceBrowserDelegate>
 - (instancetype)initWithLogger:(Logger *)logger;
 @end
@@ -233,8 +234,7 @@ static pthread_mutex_t consoleGrabbersMutex = PTHREAD_MUTEX_INITIALIZER;
 static int sConsolePipes[4] = { -1, -1, -1, -1 };
 static int sSTDOUT = -1, sSTDERR = -1;
 static int sSTDOUThadSIGPIPE, sSTDERRhadSIGPIPE;
-static dispatch_source_t sSTDOUTGrabber = NULL;
-static dispatch_source_t sSTDERRGrabber = NULL;
+static pthread_t consoleGrabThread;
 
 // -----------------------------------------------------------------------------
 #pragma mark -
@@ -352,6 +352,8 @@ void LoggerSetupBonjour(Logger *logger, CFStringRef bonjourServiceType, CFString
 		logger = LoggerGetDefaultLogger();
 	if (logger != NULL)
 	{
+		pthread_mutex_lock(&logger->logQueueMutex);
+		
 		BOOL change = ((bonjourServiceName != NULL) != (logger->bonjourServiceName != NULL) ||
 					   (bonjourServiceName != NULL && CFStringCompare(bonjourServiceName, logger->bonjourServiceName, 0) != kCFCompareEqualTo))
 		||			((bonjourServiceType != NULL) != (logger->bonjourServiceType != NULL) ||
@@ -371,31 +373,46 @@ void LoggerSetupBonjour(Logger *logger, CFStringRef bonjourServiceType, CFString
 		logger->bonjourServiceName = bonjourServiceName;
 
 		if (change && logger->remoteOptionsChangedSource != NULL)
-		{
 			CFRunLoopSourceSignal(logger->remoteOptionsChangedSource);
-		}
+		
+		pthread_mutex_unlock(&logger->logQueueMutex);
 	}
 }
 
 CFStringRef LoggerGetBonjourServiceType(Logger *logger)
 {
 	logger = logger ?: LoggerGetDefaultLogger();
-	return logger ? logger->bonjourServiceType : NULL;
+	pthread_mutex_lock(&logger->logQueueMutex);
+	CFStringRef result = logger ? logger->bonjourServiceType : NULL;
+	pthread_mutex_unlock(&logger->logQueueMutex);
+	return result;
 }
 
 CFStringRef LoggerGetBonjourServiceName(Logger *logger)
 {
 	logger = logger ?: LoggerGetDefaultLogger();
-	return logger ? logger->bonjourServiceName : NULL;
+	pthread_mutex_lock(&logger->logQueueMutex);
+	CFStringRef result = logger ? logger->bonjourServiceName : NULL;
+	pthread_mutex_unlock(&logger->logQueueMutex);
+	return result;
+}
+
+/// Stringification, see this:
+/// http://gcc.gnu.org/onlinedocs/cpp/Stringification.html
+#define nslogger_xstr(s) nslogger_str(s)
+#define nslogger_str(s) #s
+
+void LoggerSetupBonjourForBuildUser()
+{
+    LoggerSetupBonjour(LoggerGetDefaultLogger(), NULL, CFSTR(nslogger_xstr(NSLOGGER_BUILD_USERNAME)));
 }
 
 void LoggerSetViewerHost(Logger *logger, CFStringRef hostName, UInt32 port)
 {
-	if (logger == NULL)
-		logger = LoggerGetDefaultLogger();
-	if (logger == NULL)
-		return;
+	logger = logger ?: LoggerGetDefaultLogger();
 
+	pthread_mutex_lock(&logger->logQueueMutex);
+	
 	CFStringRef previousHost = logger->host;
 	UInt32 previousPort = logger->port;
 
@@ -415,29 +432,33 @@ void LoggerSetViewerHost(Logger *logger, CFStringRef hostName, UInt32 port)
 		 
 	if (previousHost != NULL)
 		CFRelease(previousHost);
+
+	pthread_mutex_unlock(&logger->logQueueMutex);
 }
 
 CFStringRef LoggerGetViewerHostName(Logger *logger)
 {
 	logger = logger ?: LoggerGetDefaultLogger();
-	return logger ? logger->host : NULL;
+	pthread_mutex_lock(&logger->logQueueMutex);
+	CFStringRef result = logger ? logger->host : NULL;
+	pthread_mutex_unlock(&logger->logQueueMutex);
+	return result;
 }
 
 UInt32 LoggerGetViewerPort(Logger *logger)
 {
 	logger = logger ?: LoggerGetDefaultLogger();
-	return logger ? logger->port : 0;
+	pthread_mutex_lock(&logger->logQueueMutex);
+	UInt32 result = logger ? logger->port : 0;
+	pthread_mutex_unlock(&logger->logQueueMutex);
+	return result;
 }
 
 void LoggerSetBufferFile(Logger *logger, CFStringRef absolutePath)
 {
-	if (logger == NULL)
-	{
-		logger = LoggerGetDefaultLogger();
-		if (logger == NULL)
-			return;
-	}
-
+	logger = logger ?: LoggerGetDefaultLogger();
+	pthread_mutex_lock(&logger->logQueueMutex);
+	
 	BOOL change = ((logger->bufferFile != NULL && absolutePath == NULL) ||
 				   (logger->bufferFile == NULL && absolutePath != NULL) ||
 				   (logger->bufferFile != NULL && absolutePath != NULL && CFStringCompare(logger->bufferFile, absolutePath, (CFStringCompareFlags) 0) != kCFCompareEqualTo));
@@ -450,15 +471,21 @@ void LoggerSetBufferFile(Logger *logger, CFStringRef absolutePath)
 		}
 		if (absolutePath != NULL)
 			logger->bufferFile = CFStringCreateCopy(NULL, absolutePath);
+
 		if (logger->bufferFileChangedSource != NULL)
 			CFRunLoopSourceSignal(logger->bufferFileChangedSource);
 	}
+
+	pthread_mutex_unlock(&logger->logQueueMutex);
 }
 
 CFStringRef LoggerGetBufferFile(Logger *logger)
 {
 	logger = logger ?: LoggerGetDefaultLogger();
-	return logger ? logger->bufferFile : NULL;
+	pthread_mutex_lock(&logger->logQueueMutex);
+	CFStringRef result = logger ? logger->bufferFile : NULL;
+	pthread_mutex_unlock(&logger->logQueueMutex);
+	return result;
 }
 
 Logger *LoggerStart(Logger *logger)
@@ -515,6 +542,7 @@ void LoggerStop(Logger *logger)
             LoggerStopGrabbingConsole(logger);
 			logger->quit = YES;
 			pthread_join(logger->workerThread, NULL);
+			logger->workerThread = NULL;
 		}
 
 		CFRelease(logger->bonjourServiceBrowsers);
@@ -635,6 +663,9 @@ static void *LoggerWorkerThread(Logger *logger)
         (*registerThreadWithCollector_fn)();
 #endif
 
+	// access to the runloop sources is protected by our logQueue mutex
+	pthread_mutex_lock(&logger->logQueueMutex);
+
 	// Create the run loop source that signals when messages have been added to the runloop
 	// this will directly trigger a WriteMoreData() call, which will or won't write depending
 	// on whether we're connected and there's space available in the stream
@@ -648,34 +679,34 @@ static void *LoggerWorkerThread(Logger *logger)
 		return NULL;
 	}
 
-	// Create the buffering stream if needed
-	if (logger->bufferFile != NULL)
-		LoggerCreateBufferWriteStream(logger);
-	
 	// Create the runloop source that lets us know when file buffering options change
 	LoggerPrepareRunloopSource(logger, &logger->bufferFileChangedSource, &LoggerFileBufferingOptionsChanged);
 
 	// Create the runloop source that lets us know when remote (host, Bonjour) settings change
 	LoggerPrepareRunloopSource(logger, &logger->remoteOptionsChangedSource, &LoggerRemoteSettingsChanged);
-	
+
+	pthread_mutex_unlock(&logger->logQueueMutex);
+
+	// Create the buffering stream if needed
+	if (logger->bufferFile != NULL)
+		LoggerCreateBufferWriteStream(logger);
+
 	// Start Reachability (when needed), which determines when we take the next step
 	// (once Reachability status is known, we'll decide to either start Bonjour browsing or
 	// try connecting to a direct host)
 	LoggerStartReachabilityChecking(logger);
 
 	// Run logging thread until LoggerStop() is called
-	NSTimeInterval timeout = 0.10;
+	NSTimeInterval timeout = 0.05;
 	while (!logger->quit)
 	{
 		int result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, timeout, true);
 		if (result == kCFRunLoopRunFinished || result == kCFRunLoopRunStopped)
 			break;
 		if (result == kCFRunLoopRunHandledSource)
-		{
-			timeout = 0.0;
-			continue;
-		}
-		timeout = fmax(1.0, fmin(0.10, timeout+0.0005));
+            timeout = 0;
+        else
+            timeout = fmax(0.05, timeout+0.005);
 	}
 
 	// Cleanup
@@ -717,7 +748,6 @@ static void *LoggerWorkerThread(Logger *logger)
 	// if the client ever tries to log again against us, make sure that logs at least
 	// go to console
 	logger->options |= kLoggerOption_LogToConsole;
-	logger->workerThread = NULL;
 	
 	LOGGERDBG(CFSTR("Stop LoggerWorkerThread"));
 	return NULL;
@@ -818,11 +848,15 @@ static void LoggerLogToConsole(CFDataRef data)
 				// trim whitespace and newline at both ends of the string
 				uint8_t *q = p;
 				uint32_t l = partSize;
-				while (l && (*q == ' ' || *q == '\t' || *q == '\n' || *q == '\r'))
-					q++, l--;
+                while (l && (*q == ' ' || *q == '\t' || *q == '\n' || *q == '\r')) {
+                    q++;
+                    l--;
+                }
 				uint8_t *r = q + l - 1;
-				while (l && (*r == ' ' || *r == '\t' || *r == '\n' || *r == '\r'))
-					r--, l--;
+                while (l && (*r == ' ' || *r == '\t' || *r == '\n' || *r == '\r')) {
+                    r--;
+                    l--;
+                }
 				part = CFStringCreateWithBytesNoCopy(NULL, q, (CFIndex)l, kCFStringEncodingUTF8, false, kCFAllocatorNull);
 			}
 			else if (partType == PART_TYPE_BINARY)
@@ -942,7 +976,7 @@ static void LoggerLogToConsole(CFDataRef data)
 
 static void LoggerWriteMoreData(Logger *logger)
 {
-	uint32_t logToConsole = (logger->options & kLoggerOption_LogToConsole);
+    BOOL logToConsole = (logger->options & (kLoggerOption_LogToConsole | kLoggerOption_CaptureSystemConsole)) == kLoggerOption_LogToConsole;
 	
 	if (!logger->connected)
 	{
@@ -987,6 +1021,7 @@ static void LoggerWriteMoreData(Logger *logger)
 		if (logger->sendBufferUsed == 0)
 		{
 			// pull more data from the log queue
+			pthread_mutex_lock(&logger->logQueueMutex);
 			if (logger->bufferReadStream != NULL)
 			{
 				if (!CFReadStreamHasBytesAvailable(logger->bufferReadStream))
@@ -1003,7 +1038,6 @@ static void LoggerWriteMoreData(Logger *logger)
 			}
 			else
 			{
-				pthread_mutex_lock(&logger->logQueueMutex);
 				while (CFArrayGetCount(logger->logQueue))
 				{
 					CFDataRef d = (CFDataRef)CFArrayGetValueAtIndex(logger->logQueue, 0);
@@ -1017,25 +1051,23 @@ static void LoggerWriteMoreData(Logger *logger)
 					CFArrayRemoveValueAtIndex(logger->logQueue, 0);
 					logger->incompleteSendOfFirstItem = NO;
 				}
-				pthread_mutex_unlock(&logger->logQueueMutex);
 			}
 			if (logger->sendBufferUsed == 0) 
 			{
 				// are we done yet?
-				pthread_mutex_lock(&logger->logQueueMutex);
 				if (CFArrayGetCount(logger->logQueue) == 0)
 				{
-					pthread_mutex_unlock(&logger->logQueueMutex);
 					pthread_cond_broadcast(&logger->logQueueEmpty);
+					pthread_mutex_unlock(&logger->logQueueMutex);
 					return;
 				}
 
 				// first item is too big to fit in a single packet, send it separately
 				sendFirstItem = (CFMutableDataRef)CFArrayGetValueAtIndex(logger->logQueue, 0);
 				logger->incompleteSendOfFirstItem = YES;
-				pthread_mutex_unlock(&logger->logQueueMutex);
 				logger->sendBufferOffset = 0;
 			}
+			pthread_mutex_unlock(&logger->logQueueMutex);
 		}
 
 		// send data over the socket. We try hard to be failsafe and if we have to send
@@ -1081,8 +1113,7 @@ static void LoggerWriteMoreData(Logger *logger)
 				// We need to reduce the remaining data on the first item so it can be taken
 				// care of at the next iteration. We take advantage of the fact that each item
 				// in the queue is actually a mutable data block
-				// @@@ NOTE: IF WE GET DISCONNECTED WHILE DOING THIS, THINGS WILL GO WRONG
-				// NEED TO UPDATE THIS LOGIC
+				// TODO: IF WE GET DISCONNECTED WHILE DOING THIS, THINGS WILL GO WRONG - NEED TO UPDATE THIS LOGIC
 				LOGGERDBG(CFSTR("Output pipe is full"));
 				CFDataReplaceBytes((CFMutableDataRef)sendFirstItem, CFRangeMake(0, written), NULL, 0);
 				return;
@@ -1092,15 +1123,15 @@ static void LoggerWriteMoreData(Logger *logger)
 			pthread_mutex_lock(&logger->logQueueMutex);
 			CFArrayRemoveValueAtIndex(logger->logQueue, 0);
 			logger->incompleteSendOfFirstItem = NO;
-			pthread_mutex_unlock(&logger->logQueueMutex);
 			logger->sendBufferOffset = 0;
+			pthread_mutex_unlock(&logger->logQueueMutex);
 		}
 		
 		pthread_mutex_lock(&logger->logQueueMutex);
 		CFIndex remainingMsgs = CFArrayGetCount(logger->logQueue);
-		pthread_mutex_unlock(&logger->logQueueMutex);
 		if (remainingMsgs == 0)
 			pthread_cond_broadcast(&logger->logQueueEmpty);
+		pthread_mutex_unlock(&logger->logQueueMutex);
 	}
 }
 
@@ -1108,72 +1139,55 @@ static void LoggerWriteMoreData(Logger *logger)
 #pragma mark -
 #pragma mark Console logs redirection support
 // -----------------------------------------------------------------------------
-
-static void LoggerLogMessageToConsoleGrabbers(CFStringRef tag, CFStringRef message)
+static void LoggerLogFromConsole(CFStringRef tag, int fd, int outfd, CFMutableDataRef data)
 {
-	pthread_mutex_lock(&consoleGrabbersMutex);
-	for (unsigned i = 0; i < consoleGrabbersListLength; i++)
-	{
-		if (consoleGrabbersList[i] != NULL)
-			LogMessageRawToF(consoleGrabbersList[i], NULL, 0, NULL, (NSString *)tag, 0, (NSString *)message);
-	}
-	pthread_mutex_unlock(&consoleGrabbersMutex);
-}
+	// protected by `consoleGrabbersMutex`
 
-#define kFileDescriptorCaptureBufferSize 1024
-
-static dispatch_source_t LoggerStartGrabbingFD(int fd, CFStringRef tag)
-{
-	// console capture implementation derived from https://github.com/swisspol/XLFacility/blob/master/XLFacility/Core/XLFacility.m
-	// Copyright (c) 2014, Pierre-Olivier Latour
+	const int BUFSIZE = 1000;
 	size_t prognameLength = strlen(getprogname());
-	
-	unsigned char* buffer = (unsigned char *)malloc(kFileDescriptorCaptureBufferSize);
-	CFMutableDataRef data = CFDataCreateMutable(NULL, 0);
-	
-	fcntl(fd, F_SETFL, O_NONBLOCK);
-	
-	dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, fd, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
-	dispatch_source_set_cancel_handler(source, ^{
-		free(buffer);
-	});
-	
-	dispatch_source_set_event_handler(source, ^{
-		// pump all outstanding data out of FD
-		for(;;)
+
+	UInt8 buf[BUFSIZE];
+	ssize_t bytes_read = 0;
+	while ((bytes_read = read(fd, buf, BUFSIZE-1)) >= 0)
+	{
+		if (bytes_read == 0)
+			continue;
+
+		CFDataAppendBytes(data, buf, bytes_read);
+
+		if (outfd != -1)
 		{
-			ssize_t size = read(fd, buffer, kFileDescriptorCaptureBufferSize);
-			if (size > 0)
-				CFDataAppendBytes(data, buffer, size);
-			if (size < kFileDescriptorCaptureBufferSize)
-				break;
+			// output received data to the original fd (so as to keep output in the Xcode console etc)
+			//write(outfd, "##", 2); // internal debug stuff to visualize stdout/stderr fragmentation
+			write(outfd, buf, (size_t)bytes_read);
 		}
 		
-		// break into lines and push to log
 		for(;;)
 		{
-			// locate newline
+			// locate newline, group multiple lines in the same log string
 			const unsigned char *bytes = CFDataGetMutableBytePtr(data);
 			if (bytes == NULL)	// pointer may be null if data is empty
 				break;
-			NSInteger pos = 0, maxPos = CFDataGetLength(data);
+			
+			NSInteger pos = 0, maxPos = CFDataGetLength(data), lineBreak = -1;
 			while (pos < maxPos)
 			{
 				if (bytes[pos] == '\n')
-					break;
+					lineBreak = pos;
 				pos++;
 			}
-			if (pos == maxPos)
+			if (lineBreak == -1)
 				break;
-
+			pos = lineBreak;
+			
+			// detect and remove NSLog header if any
 			NSUInteger offset = 0;
 			if (pos > 24 + prognameLength + 2)
 			{
-				// detect and remove NSLog header
 				// "yyyy-mm-dd HH:MM:ss.SSS progname[:] "
 				if ((bytes[4] == '-') && (bytes[7] == '-') && (bytes[10] == ' ') && (bytes[13] == ':') && (bytes[16] == ':') && (bytes[19] == '.'))
 				{
-					if ((bytes[23] == ' ') && /*!strncmp(&bytes[24], pname, prognameLength) &&*/ (bytes[24 + prognameLength] == '['))
+					if ((bytes[23] == ' ') &&  (bytes[24 + prognameLength] == '['))
 					{
 						const char* found = strnstr((const char *)&bytes[24 + prognameLength + 1], "] ", maxPos - (24 + prognameLength + 1));
 						if (found)
@@ -1188,26 +1202,83 @@ static dispatch_source_t LoggerStartGrabbingFD(int fd, CFStringRef tag)
 			CFStringRef message = CFStringCreateWithBytes(NULL, bytes+offset, pos-offset, kCFStringEncodingUTF8, false);
 			if (message != NULL)
 			{
-				LoggerLogMessageToConsoleGrabbers(tag, message);
+				for (unsigned i = 0; i < consoleGrabbersListLength; i++)
+				{
+					if (consoleGrabbersList[i] != NULL)
+						LogMessageRawToF(consoleGrabbersList[i], NULL, 0, NULL, (NSString *)tag, 0, (NSString *)message);
+				}
 				CFRelease(message);
 			}
 			else
 			{
 				LOGGERDBG(CFSTR("failed extracting string of length %d from fd %d"), pos-offset, fd);
 			}
-
+			
 			// drop all newlines and move on
 			while (++pos < maxPos && (bytes[pos] == '\n' || bytes[pos] == '\r'))
 				;
 			CFDataDeleteBytes(data, CFRangeMake(0, pos));
 		}
-	});
-	dispatch_resume(source);
-	return source;
+	}
+}
+
+static void *LoggerConsoleGrabThread(void *context)
+{
+#pragma unused (context)
+	pthread_mutex_lock(&consoleGrabbersMutex);
+
+	int fdout = sConsolePipes[0];
+	fcntl(fdout, F_SETFL, fcntl(fdout, F_GETFL, 0) | O_NONBLOCK);
+	
+	int fderr = sConsolePipes[2];
+	fcntl(fderr, F_SETFL, fcntl(fderr, F_GETFL, 0) | O_NONBLOCK);
+	
+	CFMutableDataRef stdoutData = CFDataCreateMutable(NULL, 0);
+	CFMutableDataRef stderrData = CFDataCreateMutable(NULL, 0);
+
+	unsigned activeGrabbers = numActiveConsoleGrabbers;
+	
+	pthread_mutex_unlock(&consoleGrabbersMutex);
+	
+	while (activeGrabbers != 0)
+	{
+		fd_set set;
+		FD_ZERO(&set);
+		FD_SET(fdout, &set);
+		FD_SET(fderr, &set);
+		
+		int ret = select(fderr + 1, &set, NULL, NULL, NULL);
+		
+		if (ret <= 0)
+		{
+			// ==0: time expired without activity
+			// < 0: error occurred
+			break;
+		}
+
+		pthread_mutex_lock(&consoleGrabbersMutex);
+		
+		activeGrabbers = numActiveConsoleGrabbers;
+		if (activeGrabbers != 0)
+		{
+			if (FD_ISSET(fdout, &set))
+				LoggerLogFromConsole(CFSTR("stdout"), fdout, sSTDOUT, stdoutData);
+			if (FD_ISSET(fderr, &set ))
+				LoggerLogFromConsole(CFSTR("stderr"), fderr, sSTDERR, stderrData);
+		}
+
+		pthread_mutex_unlock(&consoleGrabbersMutex);
+	}
+	
+	CFRelease(stdoutData);
+	CFRelease(stderrData);
+	return NULL;
 }
 
 static void LoggerStartConsoleRedirection()
 {
+	// protected by `consoleGrabbersMutex`
+	
 	// keep the original pipes so we can still forward everything
 	// (i.e. to the running IDE that needs to display or interpret console messages)
 	// and remember the SIGPIPE settings, as we are going to clear them to prevent
@@ -1219,7 +1290,7 @@ static void LoggerStartConsoleRedirection()
 		sSTDERRhadSIGPIPE = fcntl(STDERR_FILENO, F_GETNOSIGPIPE);
 		sSTDERR = dup(STDERR_FILENO);
 	}
-
+	
 	// create the pipes
 	if (sConsolePipes[0] == -1)
 	{
@@ -1230,7 +1301,7 @@ static void LoggerStartConsoleRedirection()
 			dup2(sConsolePipes[1], STDOUT_FILENO);
 		}
 	}
-
+	
 	if (sConsolePipes[2] == -1)
 	{
 		if (pipe(&sConsolePipes[2]) != -1)
@@ -1240,40 +1311,29 @@ static void LoggerStartConsoleRedirection()
 			dup2(sConsolePipes[3], STDERR_FILENO);
 		}
 	}
-
-	sSTDOUTGrabber = LoggerStartGrabbingFD(sConsolePipes[0], CFSTR("stdout"));
-	sSTDERRGrabber = LoggerStartGrabbingFD(sConsolePipes[2], CFSTR("stderr"));
+	
+	pthread_create(&consoleGrabThread, NULL, &LoggerConsoleGrabThread, NULL);
 }
 
 static void LoggerStopConsoleRedirection()
 {
-	// cancel & destroy the dispatch sources
-	dispatch_source_cancel(sSTDOUTGrabber);
-	dispatch_source_cancel(sSTDERRGrabber);
-#if __IPHONE_OS_VERSION_MIN_REQUIRED >= 60000 || MAC_OS_X_VERSION_MIN_REQUIRED >= 1080
-    // Integration of dispatch objects with Objective-C requires targeting iOS 6.0+ and Mac OS X 10.8+
-#else
-    dispatch_release(sSTDOUTGrabber);
-    dispatch_release(sSTDERRGrabber);
-#endif
-	sSTDOUTGrabber = NULL;
-	sSTDERRGrabber = NULL;
+	// protected by consoleGrabbersMutex (see below)
 
 	// close the pipes - will force exiting the console logger thread
 	// assume the console grabber mutex has been acquired
 	dup2(sSTDOUT, STDOUT_FILENO);
 	dup2(sSTDERR, STDERR_FILENO);
-
+	
 	close(sSTDOUT);
 	close(sSTDERR);
-
+	
 	sSTDOUT = -1;
 	sSTDERR = -1;
-    
+	
 	// restore sigpipe flag on standard streams
 	fcntl(STDOUT_FILENO, F_SETNOSIGPIPE, &sSTDOUThadSIGPIPE);
 	fcntl(STDERR_FILENO, F_SETNOSIGPIPE, &sSTDERRhadSIGPIPE);
-
+	
 	// close pipes, this will trigger an error in select() and a console grab thread exit
 	if (sConsolePipes[0] != -1)
 	{
@@ -1287,15 +1347,20 @@ static void LoggerStopConsoleRedirection()
 		close(sConsolePipes[1]);
 	}
 	sConsolePipes[0] = sConsolePipes[1] = sConsolePipes[2] = sConsolePipes[3] = -1;
+	numActiveConsoleGrabbers = 0;
+
+	pthread_mutex_unlock(&consoleGrabbersMutex);
+	pthread_join(consoleGrabThread, NULL);
+	pthread_mutex_lock(&consoleGrabbersMutex);
 }
 
 static void LoggerStartGrabbingConsole(Logger *logger)
 {
 	if (!(logger->options & kLoggerOption_CaptureSystemConsole))
 		return;
-
+	
 	pthread_mutex_lock(&consoleGrabbersMutex);
-
+	
 	Boolean added = FALSE;
 	for (unsigned i = 0; i < numActiveConsoleGrabbers; i++)
 	{
@@ -1312,35 +1377,35 @@ static void LoggerStartGrabbingConsole(Logger *logger)
 		consoleGrabbersList = realloc(consoleGrabbersList, ++consoleGrabbersListLength * sizeof(Logger *));
 		consoleGrabbersList[numActiveConsoleGrabbers++] = logger;
 	}
-
+	
 	LoggerStartConsoleRedirection(); // Start redirection if necessary
-
+	
 	pthread_mutex_unlock(&consoleGrabbersMutex);
 }
 
 static void LoggerStopGrabbingConsole(Logger *logger)
 {
-	if (numActiveConsoleGrabbers == 0)
-		return;
-
 	pthread_mutex_lock(&consoleGrabbersMutex);
-
-	for (unsigned grabberIndex = 0; grabberIndex < consoleGrabbersListLength; grabberIndex++)
+	
+	if (numActiveConsoleGrabbers != 0)
 	{
-		if (consoleGrabbersList[grabberIndex] == logger)
+		for (unsigned grabberIndex = 0; grabberIndex < consoleGrabbersListLength; grabberIndex++)
 		{
-			consoleGrabbersList[grabberIndex] = NULL;
-			if (--numActiveConsoleGrabbers == 0)
+			if (consoleGrabbersList[grabberIndex] == logger)
 			{
-				consoleGrabbersListLength = 0;
-				free(consoleGrabbersList);
-				consoleGrabbersList = NULL;
-				LoggerStopConsoleRedirection();
+				consoleGrabbersList[grabberIndex] = NULL;
+				if (--numActiveConsoleGrabbers == 0)
+				{
+					consoleGrabbersListLength = 0;
+					free(consoleGrabbersList);
+					consoleGrabbersList = NULL;
+					LoggerStopConsoleRedirection();
+				}
+				break;
 			}
-			break;
 		}
 	}
-
+	
 	pthread_mutex_unlock(&consoleGrabbersMutex);
 }
 
@@ -1776,22 +1841,9 @@ static void LoggerReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwor
 
 	SCNetworkReachabilityFlags oldFlags = logger->reachabilityFlags;
 	logger->reachabilityFlags = flags;
-
-	if (flags & kSCNetworkReachabilityFlagsReachable)
-	{
-		// target host or internet became reachable
-		LOGGERDBG(CFSTR("-> target became reachable"));
-		logger->targetReachable = YES;
-
-		// in the event a network transition occurred without network loss (i.e. WiFi -> 3G),
-		// preemptively disconnect. In many cases, if the network stays up, we will never receive
-		// a disconnection (possibly due to SSH ?)
-		if (flags != oldFlags && logger->logStream != NULL)
-			LoggerWriteStreamTerminated(logger);
-		else
-			LoggerTryConnect(logger);			// will start Bonjour browsing if needed
-	}
-	else if (logger->connected || logger->logStream != NULL)
+	
+	bool isReachable = flags & kSCNetworkReachabilityFlagsReachable;
+	if (!isReachable && (logger->connected || logger->logStream != NULL))
 	{
 		// lost internet connecton. Force a disconnect, we'll wait for the connection to become
 		// available again
@@ -1801,6 +1853,23 @@ static void LoggerReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwor
 			LoggerWriteStreamTerminated(logger);
 		LoggerStopBonjourBrowsing(logger);
 		LoggerStopReconnectTimer(logger);
+	}
+	else
+	{
+		if (isReachable)
+			LOGGERDBG(CFSTR("-> target became reachable"));
+		else
+			LOGGERDBG(CFSTR("-> target is not reachable, let's pretend it is and try to connect anyway"));
+		
+		logger->targetReachable = YES;
+		
+		// in the event a network transition occurred without network loss (i.e. WiFi -> 3G),
+		// preemptively disconnect. In many cases, if the network stays up, we will never receive
+		// a disconnection (possibly due to SSH ?)
+		if (flags != oldFlags && logger->logStream != NULL)
+			LoggerWriteStreamTerminated(logger);
+		else
+			LoggerTryConnect(logger);			// will start Bonjour browsing if needed
 	}
 }
 
@@ -1896,16 +1965,6 @@ static BOOL LoggerConfigureAndOpenStream(Logger *logger)
 				kCFNull
 			};
 			
-#if TARGET_OS_IPHONE
-			// workaround for TLS in iOS 5 as per TN2287
-			// see http://developer.apple.com/library/ios/#technotes/tn2287/_index.html#//apple_ref/doc/uid/DTS40011309
-			// if we are running iOS 5 or later, use a special mode that allows the stack to downgrade gracefully
-			@autoreleasepool {
-				NSString *versionString = [[UIDevice currentDevice] systemVersion];
-				if ([versionString compare:@"5.0" options:NSNumericSearch] != NSOrderedAscending)
-					SSLValues[0] = CFSTR("kCFStreamSocketSecurityLevelTLSv1_0SSLv3");
-			}
-#endif
 			CFDictionaryRef SSLDict = CFDictionaryCreate(NULL, SSLKeys, SSLValues, 4, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 			CFWriteStreamSetProperty(logger->logStream, kCFStreamPropertySSLSettings, SSLDict);
 			CFRelease(SSLDict);
@@ -2031,7 +2090,7 @@ static void LoggerWriteStreamTerminated(Logger *logger)
 		CFRelease(logger->logStream);
 		logger->logStream = NULL;
 	}
-	
+
 	if (logger->bufferReadStream != NULL)
 	{
 		// In the case the connection drops before we have flushed the
@@ -2113,6 +2172,31 @@ static void LoggerWriteStreamCallback(CFWriteStreamRef ws, CFStreamEventType eve
 #pragma mark -
 #pragma mark Internal encoding functions
 // -----------------------------------------------------------------------------
+
+#define WRITE_MISALIGNED_INT32(p,n) { \
+	uint32_t i32 = (uint32_t)(n); \
+	uint8_t *q32 = (uint8_t *)(p) + 3; \
+	*q32-- = (uint8_t)i32; i32 >>= 8; \
+	*q32-- = (uint8_t)i32; i32 >>= 8; \
+	*q32-- = (uint8_t)i32; i32 >>= 8; \
+	*q32 = (uint8_t)i32; \
+}
+
+#if __LP64__
+#define WRITE_MISALIGNED_INT64(p,n) { \
+	uint32_t i = (uint32_t)(n); \
+	uint8_t *q = (uint8_t *)(p) + 7; \
+	*q-- = (uint8_t)i; i >>= 8; \
+	*q-- = (uint8_t)i; i >>= 8; \
+	*q-- = (uint8_t)i; i >>= 8; \
+	*q-- = (uint8_t)i; i >>= 8; \
+	*q-- = (uint8_t)i; i >>= 8; \
+	*q-- = (uint8_t)i; i >>= 8; \
+	*q-- = (uint8_t)i; i >>= 8; \
+	*q = (uint8_t)i; \
+}
+#endif
+
 static uint8_t *LoggerMessagePrepareForPart(CFMutableDataRef encoder, uint32_t requiredExtraBytes)
 {
 	// Ensure a data block has the required storage capacity, update the total size and part count
@@ -2258,7 +2342,7 @@ static CFMutableDataRef LoggerMessageCreate(int32_t seq)
 				p[5] = 1;		// part count 0x0001
 				p[6] = (uint8_t)PART_KEY_MESSAGE_SEQ;
 				p[7] = (uint8_t)PART_TYPE_INT32;
-				*(uint32_t *)(p + 8) = htonl(seq);		// ARMv6 and later, x86 processors do just fine with unaligned accesses
+				*(uint32_t *)(p + 8) = htonl(seq);
 			}
 			else
 			{
@@ -2282,6 +2366,14 @@ static void LoggerMessageFinalize(CFMutableDataRef encoder)
 	}
 }
 
+static void LoggerMessageAddInteger(CFMutableDataRef encoder, NSInteger anInt, int key) {
+#if __LP64__
+    LoggerMessageAddInt64(encoder, anInt, key);
+#else
+    LoggerMessageAddInt32(encoder, anInt, key);
+#endif
+}
+
 static void LoggerMessageAddInt32(CFMutableDataRef encoder, int32_t anInt, int key)
 {
 	uint8_t *p = LoggerMessagePrepareForPart(encoder, 6);
@@ -2289,7 +2381,7 @@ static void LoggerMessageAddInt32(CFMutableDataRef encoder, int32_t anInt, int k
 	{
 		*p++ = (uint8_t)key;
 		*p++ = (uint8_t)PART_TYPE_INT32;
-		*(uint32_t *)p = htonl(anInt);		// ARMv6 and later, x86 processors do just fine with unaligned accesses
+		WRITE_MISALIGNED_INT32(p, anInt);
 	}
 }
 
@@ -2301,9 +2393,7 @@ static void LoggerMessageAddInt64(CFMutableDataRef encoder, int64_t anInt, int k
 	{
 		*p++ = (uint8_t)key;
 		*p++ = (uint8_t)PART_TYPE_INT64;
-		uint32_t *q = (uint32_t *)p;
-		*q++ = htonl((uint32_t)(anInt >> 32));	// ARMv6 and later, x86 processors do just fine with unaligned accesses
-		*q = htonl((uint32_t)anInt);
+		WRITE_MISALIGNED_INT64(p, anInt)
 	}
 }
 #endif
@@ -2336,7 +2426,7 @@ static void LoggerMessageAddCString(CFMutableDataRef data, const char *aString, 
 			{
 				*p++ = (uint8_t)key;
 				*p++ = (uint8_t)PART_TYPE_STRING;
-				*(uint32_t *)p = htonl(n);		// ARMv6 and later, x86 processors do just fine with unaligned accesses
+				WRITE_MISALIGNED_INT32(p, n)
 				memcpy(p + 4, buf, (size_t)n);
 			}
 		}
@@ -2370,7 +2460,7 @@ static void LoggerMessageAddString(CFMutableDataRef encoder, CFStringRef aString
 	{
 		*p++ = (uint8_t)key;
 		*p++ = (uint8_t)PART_TYPE_STRING;
-		*(uint32_t *)p = htonl(partSize);		// ARMv6 and later, x86 processors do just fine with unaligned accesses
+		WRITE_MISALIGNED_INT32(p, partSize)
 		if (partSize && bytes != NULL)
 			memcpy(p + 4, bytes, (size_t)partSize);
 	}
@@ -2389,7 +2479,7 @@ static void LoggerMessageAddData(CFMutableDataRef encoder, CFDataRef theData, in
 		{
 			*p++ = (uint8_t)key;
 			*p++ = (uint8_t)partType;
-			*((uint32_t *)p) = htonl(dataLength);	// ARMv6 and later, x86 processors do just fine with unaligned accesses
+			WRITE_MISALIGNED_INT32(p, dataLength)
 			if (dataLength)
 				memcpy(p + 4, CFDataGetBytePtr(theData), (size_t)dataLength);
 		}
@@ -2535,7 +2625,6 @@ static void LoggerPushMessageToQueue(Logger *logger, CFDataRef message)
 		CFArrayInsertValueAtIndex(logger->logQueue, idx, message);
 	else
 		CFArrayAppendValue(logger->logQueue, message);
-	pthread_mutex_unlock(&logger->logQueueMutex);
 	
 	if (logger->messagePushedSource != NULL)
 	{
@@ -2545,19 +2634,18 @@ static void LoggerPushMessageToQueue(Logger *logger, CFDataRef message)
 		// to fire the runLoop source
 		CFRunLoopSourceSignal(logger->messagePushedSource);
 	}
-	else if (logger->workerThread == NULL && (logger->options & kLoggerOption_LogToConsole))
+	else if (logger->workerThread == NULL && (logger->options & kLoggerOption_LogToConsole) && !(logger->options & kLoggerOption_CaptureSystemConsole))
 	{
 		// In this case, a failure creating the message runLoop source forces us
 		// to always log to console
-		pthread_mutex_lock(&logger->logQueueMutex);
 		while (CFArrayGetCount(logger->logQueue))
 		{
 			LoggerLogToConsole(CFArrayGetValueAtIndex(logger->logQueue, 0));
 			CFArrayRemoveValueAtIndex(logger->logQueue, 0);
 		}
-		pthread_mutex_unlock(&logger->logQueueMutex);
 		pthread_cond_broadcast(&logger->logQueueEmpty);		// in case other threads are waiting for a flush
 	}
+	pthread_mutex_unlock(&logger->logQueueMutex);
 }
 
 static void LogMessageRawTo_internal(Logger *logger,
@@ -2653,6 +2741,47 @@ static void LogMessageTo_internal(Logger *logger,
     }
 }
 
+void LogMessage_noFormat(NSString *filename,
+                         NSInteger lineNumber,
+                         NSString *functionName,
+                         NSString *domain,
+                         NSInteger level,
+                         NSString *message)
+{
+    Logger *logger = LoggerStart(NULL);	// start if needed
+    if (logger != NULL)
+    {
+        int32_t seq = OSAtomicIncrement32Barrier(&logger->messageSeq);
+        LOGGERDBG2(CFSTR("%ld LogMessage"), seq);
+        
+        CFMutableDataRef encoder = LoggerMessageCreate(seq);
+        if (encoder != NULL)
+        {
+            LoggerMessageAddInt32(encoder, LOGMSG_TYPE_LOG, PART_KEY_MESSAGE_TYPE);
+            if (domain != nil && [domain length])
+                LoggerMessageAddString(encoder, (CFStringRef)domain, PART_KEY_TAG);
+            if (level)
+                LoggerMessageAddInteger(encoder, level, PART_KEY_LEVEL);
+            if (filename != NULL)
+                LoggerMessageAddString(encoder, (CFStringRef)filename, PART_KEY_FILENAME);
+            if (lineNumber)
+                LoggerMessageAddInteger(encoder, lineNumber, PART_KEY_LINENUMBER);
+            if (functionName != NULL)
+                LoggerMessageAddString(encoder, (CFStringRef)functionName, PART_KEY_FUNCTIONNAME);
+            
+            LoggerMessageAddString(encoder, (CFStringRef)message, PART_KEY_MESSAGE);
+            
+            LoggerMessageFinalize(encoder);
+            LoggerPushMessageToQueue(logger, encoder);
+            CFRelease(encoder);
+        }
+        else
+        {
+            LOGGERDBG2(CFSTR("-> failed creating encoder"));
+        }
+    }
+}
+
 static void LogImageTo_internal(Logger *logger,
 								const char *filename,
 								int lineNumber,
@@ -2701,6 +2830,53 @@ static void LogImageTo_internal(Logger *logger,
 	}
 }
 
+void LogImage_noFormat(NSString *filename,
+                       NSInteger lineNumber,
+                       NSString *functionName,
+                       NSString *domain,
+                       NSInteger level,
+                       NSInteger width,
+                       NSInteger height,
+                       NSData *data)
+{
+    Logger *logger = LoggerStart(NULL);		// start if needed
+    if (logger != NULL)
+    {
+        int32_t seq = OSAtomicIncrement32Barrier(&logger->messageSeq);
+        LOGGERDBG2(CFSTR("%ld LogImage"), seq);
+        
+        CFMutableDataRef encoder = LoggerMessageCreate(seq);
+        if (encoder != NULL)
+        {
+            LoggerMessageAddInt32(encoder, LOGMSG_TYPE_LOG, PART_KEY_MESSAGE_TYPE);
+            if (domain != nil && [domain length])
+                LoggerMessageAddString(encoder, (CFStringRef)domain, PART_KEY_TAG);
+            if (level)
+                LoggerMessageAddInteger(encoder, level, PART_KEY_LEVEL);
+            if (width && height)
+            {
+                LoggerMessageAddInteger(encoder, width, PART_KEY_IMAGE_WIDTH);
+                LoggerMessageAddInteger(encoder, height, PART_KEY_IMAGE_HEIGHT);
+            }
+            if (filename != NULL)
+                LoggerMessageAddString(encoder, (CFStringRef)filename, PART_KEY_FILENAME);
+            if (lineNumber)
+                LoggerMessageAddInteger(encoder, lineNumber, PART_KEY_LINENUMBER);
+            if (functionName != NULL)
+                LoggerMessageAddString(encoder, (CFStringRef)functionName, PART_KEY_FUNCTIONNAME);
+            LoggerMessageAddData(encoder, (CFDataRef)data, PART_KEY_MESSAGE, PART_TYPE_IMAGE);
+            
+            LoggerMessageFinalize(encoder);
+            LoggerPushMessageToQueue(logger, encoder);
+            CFRelease(encoder);
+        }
+        else
+        {
+            LOGGERDBG2(CFSTR("-> failed creating encoder"));
+        }
+    }
+}
+
 static void LogDataTo_internal(Logger *logger,
 							   const char *filename,
 							   int lineNumber,
@@ -2731,6 +2907,46 @@ static void LogDataTo_internal(Logger *logger,
             LoggerMessageAddData(encoder, (CFDataRef)data, PART_KEY_MESSAGE, PART_TYPE_BINARY);
 
 			LoggerMessageFinalize(encoder);
+            LoggerPushMessageToQueue(logger, encoder);
+            CFRelease(encoder);
+        }
+        else
+        {
+            LOGGERDBG2(CFSTR("-> failed creating encoder"));
+        }
+    }
+}
+
+void LogData_noFormat(NSString *filename,
+                      NSInteger lineNumber,
+                      NSString *functionName,
+                      NSString *domain,
+                      NSInteger level,
+                      NSData *data)
+{
+    Logger *logger = LoggerStart(NULL);		// start if needed
+    if (logger != NULL)
+    {
+        int32_t seq = OSAtomicIncrement32Barrier(&logger->messageSeq);
+        LOGGERDBG2(CFSTR("%ld LogData"), seq);
+        
+        CFMutableDataRef encoder = LoggerMessageCreate(seq);
+        if (encoder != NULL)
+        {
+            LoggerMessageAddInt32(encoder, LOGMSG_TYPE_LOG, PART_KEY_MESSAGE_TYPE);
+            if (domain != nil && [domain length])
+                LoggerMessageAddString(encoder, (CFStringRef)domain, PART_KEY_TAG);
+            if (level)
+                LoggerMessageAddInteger(encoder, level, PART_KEY_LEVEL);
+            if (filename != NULL)
+                LoggerMessageAddString(encoder, (CFStringRef)filename, PART_KEY_FILENAME);
+            if (lineNumber)
+                LoggerMessageAddInteger(encoder, lineNumber, PART_KEY_LINENUMBER);
+            if (functionName != NULL)
+                LoggerMessageAddString(encoder, (CFStringRef)functionName, PART_KEY_FUNCTIONNAME);
+            LoggerMessageAddData(encoder, (CFDataRef)data, PART_KEY_MESSAGE, PART_TYPE_BINARY);
+            
+            LoggerMessageFinalize(encoder);
             LoggerPushMessageToQueue(logger, encoder);
             CFRelease(encoder);
         }

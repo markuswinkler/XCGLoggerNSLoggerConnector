@@ -10,7 +10,8 @@
 #endif
 #endif
 
+#import "ObjcExceptionBridging.h"
 
-FOUNDATION_EXPORT double XCGLoggerVersionNumber;
-FOUNDATION_EXPORT const unsigned char XCGLoggerVersionString[];
+FOUNDATION_EXPORT double ObjcExceptionBridgingVersionNumber;
+FOUNDATION_EXPORT const unsigned char ObjcExceptionBridgingVersionString[];
 

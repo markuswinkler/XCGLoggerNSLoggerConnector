@@ -8,8 +8,8 @@
 
 Pod::Spec.new do |s|
   s.name             = "XCGLoggerNSLoggerConnector"
-  s.version          = "0.3.2"
-  s.summary          = "Updated first parameter of XCGLogger extension functions in order to override correctly the updated XCGLogger version"
+  s.version          = "0.4.0"
+  s.summary          = "Update for Swift 4.2"
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -32,8 +32,8 @@ Pod::Spec.new do |s|
 
   s.source_files = 'XCGLoggerNSLoggerConnector/**/*.{swift}'
 
-  s.dependency 'XCGLogger', '>= 4.0'
-  s.dependency 'NSLogger', '>= 1.5'
+  s.dependency 'XCGLogger', '>= 6.0'
+  s.dependency 'NSLogger', '>= 1.7'
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.framework = 'UIKit'

@@ -1,19 +1,30 @@
 PODS:
-  - NSLogger (1.7.0):
-    - NSLogger/Standard (= 1.7.0)
-  - NSLogger/Standard (1.7.0)
-  - XCGLogger (4.0.0):
-    - XCGLogger/Core (= 4.0.0)
-  - XCGLogger/Core (4.0.0)
+  - NSLogger (1.9.0):
+    - NSLogger/ObjC (= 1.9.0)
+  - NSLogger/ObjC (1.9.0)
+  - ObjcExceptionBridging (1.0.1):
+    - ObjcExceptionBridging/ObjcExceptionBridging (= 1.0.1)
+  - ObjcExceptionBridging/ObjcExceptionBridging (1.0.1)
+  - XCGLogger (6.0.4):
+    - XCGLogger/Core (= 6.0.4)
+  - XCGLogger/Core (6.0.4):
+    - ObjcExceptionBridging
 
 DEPENDENCIES:
-  - NSLogger (>= 1.5)
-  - XCGLogger (>= 4)
+  - NSLogger (>= 1.9)
+  - XCGLogger (>= 6)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - NSLogger
+    - ObjcExceptionBridging
+    - XCGLogger
 
 SPEC CHECKSUMS:
-  NSLogger: daa17368272ddf10a0850c218fe49de23b50f2eb
-  XCGLogger: 38063ea89b4c8b23232d18efd2e12eb0005f3ea4
+  NSLogger: 9f8f5ab017eb34d1a138f4905dc7fb8e9a0e3186
+  ObjcExceptionBridging: c30e00eb3700467e695faeea30e26e18bd445001
+  XCGLogger: 4fc1bc0bdd5828cb8dc8da7a843536cda1bea8f3
 
-PODFILE CHECKSUM: d2878a795111abadb02d79b66c6c639ca3bda628
+PODFILE CHECKSUM: 485f41f500dd805d184ef237859d7ed2aa96fa06
 
-COCOAPODS: 1.2.0.beta.1
+COCOAPODS: 1.5.3

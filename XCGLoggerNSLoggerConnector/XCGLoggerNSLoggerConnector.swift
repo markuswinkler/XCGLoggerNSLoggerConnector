@@ -48,11 +48,13 @@ public class XCGNSLoggerLogDestination: BaseDestination {
         case .none:
             return 3
         }
+        let x:FileDestination!
     }
     
-    public init(owner: XCGLogger, identifier: String, addInlineDebugInfo: Bool = false) {
+	public init(owner: XCGLogger, identifier: String, addInlineDebugInfo: Bool = false, outputLevel: XCGLogger.Level = .debug) {
         super.init(owner: owner, identifier: identifier)
         self.addInlineDebugInfo = addInlineDebugInfo
+		self.outputLevel = outputLevel
     }
     
     open override func output(logDetails: LogDetails, message: String) {
@@ -98,7 +100,13 @@ public extension XCGLogger {
     public func sendImageToNSLogger(_ image: UIImage?, level: Level, label: String, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         // check if image is valid, otherwise display error
         if let image: UIImage = image {
-            LogImageDataF(fileName, Int32(lineNumber), functionName, label, convertLogLevel(level), Int32(image.size.width), Int32(image.size.height), UIImagePNGRepresentation(image))
+            #if swift(>=4.2)
+                let png = image.pngData()
+            #else
+                let png = UIImagePNGRepresentation(image)
+            #endif
+            
+            LogImageDataF(fileName, Int32(lineNumber), functionName, label, convertLogLevel(level), Int32(image.size.width), Int32(image.size.height), png)
             self.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, closure: {return "Image: \(image)"})
         }
         else {
@@ -115,7 +123,13 @@ public extension XCGLogger {
         }
         let level = XCGLogger.Level.none
         if let image: UIImage = closure() {
-            LogImageDataF(fileName, Int32(lineNumber), functionName, label, convertLogLevel(level), Int32(image.size.width), Int32(image.size.height), UIImagePNGRepresentation(image))
+            #if swift(>=4.2)
+                let png = image.pngData()
+            #else
+                let png = UIImagePNGRepresentation(image)
+            #endif
+
+            LogImageDataF(fileName, Int32(lineNumber), functionName, label, convertLogLevel(level), Int32(image.size.width), Int32(image.size.height), png)
             LogMessageF_va(fileName, Int32(lineNumber), functionName, label, Int32(convertLogLevel(level)), "\(image)", getVaList([]))
             self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "Image: \(image)"})
         }

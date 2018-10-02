@@ -1,14 +1,14 @@
 /*
  * LoggerClient.h
  *
- * version 1.7.0 23-MAY-2016
+ * version 1.9.0 25-FEB-2018
  *
  * Part of NSLogger (client side)
  * https://github.com/fpillet/NSLogger
  *
  * BSD license follows (http://www.opensource.org/licenses/bsd-license.php)
- * 
- * Copyright (c) 2010-2016 Florent Pillet All Rights Reserved.
+ *
+ * Copyright (c) 2010-2018 Florent Pillet All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -90,6 +90,15 @@ extern "C" {
 #else
 #define NSLOGGER_NOSTRIP
 #endif
+    
+#define NSLOGGER_IGNORE_NULLABILITY_BEGIN \
+    _Pragma("clang diagnostic push") \
+    _Pragma("clang diagnostic ignored \"-Wnullability-completeness\"")
+    
+#define NSLOGGER_IGNORE_NULLABILITY_END \
+    _Pragma("clang diagnostic pop")
+    
+NSLOGGER_IGNORE_NULLABILITY_BEGIN
 
 // Set the default logger which will be the one used when passing NULL for logge
 extern void LoggerSetDefaultLogger(Logger *aLogger) NSLOGGER_NOSTRIP;
@@ -117,6 +126,11 @@ extern uint32_t LoggerGetOptions(Logger *logger) NSLOGGER_NOSTRIP;
 extern void LoggerSetupBonjour(Logger *logger, CFStringRef bonjourServiceType, CFStringRef bonjourServiceName) NSLOGGER_NOSTRIP;
 extern CFStringRef LoggerGetBonjourServiceType(Logger *logger) NSLOGGER_NOSTRIP;
 extern CFStringRef LoggerGetBonjourServiceName(Logger *logger) NSLOGGER_NOSTRIP;
+
+// Set Bonjour logging name to be the username who compiled the LoggerClient.m file.
+// This is useful when several NSLogger users are on the same network. This can only be
+// used when NSLogger is integrated as source code or via with CocoaPods.
+extern void LoggerSetupBonjourForBuildUser(void) NSLOGGER_NOSTRIP;
 
 // Directly set the viewer host (hostname or IP address) and port we want to connect to. If set, LoggerStart() will
 // try to connect there first before trying Bonjour
@@ -203,6 +217,32 @@ extern void LogEndBlockTo(Logger *logger) NSLOGGER_NOSTRIP;
 // Log a marker (text can be null)
 extern void LogMarker(NSString *text) NSLOGGER_NOSTRIP;
 extern void LogMarkerTo(Logger *logger, NSString *text) NSLOGGER_NOSTRIP;
+    
+NSLOGGER_IGNORE_NULLABILITY_END
+    
+// Swift fastpath logging functions
+extern void LogMessage_noFormat(NSString * _Nullable filename,
+                                NSInteger lineNumber,
+                                NSString * _Nullable functionName,
+                                NSString * _Nullable domain,
+                                NSInteger level,
+                                NSString * _Nonnull message) NSLOGGER_NOSTRIP;
+    
+extern void LogImage_noFormat(NSString * _Nullable filename,
+                              NSInteger lineNumber,
+                              NSString * _Nullable functionName,
+                              NSString * _Nullable domain,
+                              NSInteger level,
+                              NSInteger width,
+                              NSInteger height,
+                              NSData * _Nonnull data) NSLOGGER_NOSTRIP;
+    
+extern void LogData_noFormat(NSString * _Nullable filename,
+                             NSInteger lineNumber,
+                             NSString * _Nullable functionName,
+                             NSString * _Nullable domain,
+                             NSInteger level,
+                             NSData * _Nonnull data) NSLOGGER_NOSTRIP;
 
 #ifdef __cplusplus
 };

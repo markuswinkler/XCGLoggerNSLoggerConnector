@@ -53,11 +53,9 @@ in your repository folder.
 
 Add the following line to your `Cartfile`.
 
-```github "DaveWoodCom/XCGLogger" ~> 6.0.4```
+```github "DaveWoodCom/XCGLogger" ~> 5.0.1```
 
-Then run `carthage update --no-use-binaries` or just `carthage update`. For details of the installation and usage of Carthage, visit [its project page][carthage].
-
-Developers running 5.0 and above in Swift will need to add `$(SRCROOT)/Carthage/Build/iOS/ObjcExceptionBridging.framework` to their Input Files in the Copy Carthage Frameworks Build Phase. 
+Then run `carthage update --no-use-binaries` or just `carthage update`. For details of the installation and usage of Carthage, visit [it's project page][carthage].
 
 ### [CocoaPods][cocoapods]
 
@@ -68,56 +66,27 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 use_frameworks!
 
-pod 'XCGLogger', '~> 6.0.4'
+pod 'XCGLogger', '~> 5.0.1'
 ```
 
 Specifying the pod `XCGLogger` on its own will include the core framework. We're starting to add subspecs to allow you to include optional components as well:
 
-`pod 'XCGLogger/UserInfoHelpers', '~> 6.0.4'`: Include some experimental code to help deal with using UserInfo dictionaries to tag log messages.
+`pod 'XCGLogger/UserInfoHelpers', '~> 5.0.1'`: Include some experimental code to help deal with using UserInfo dictionaries to tag log messages.
 
-Then run `pod install`. For details of the installation and usage of CocoaPods, visit [its official web site][cocoapods].
-
-Note: Before CocoaPods 1.4.0 it was not possible to use multiple pods with a mixture of Swift versions. You may need to ensure each pod is configured for the correct Swift version (check the targets in the pod project of your workspace). If you manually adjust the Swift version for a project, it'll reset the next time you run `pod install`. You can add a `post_install` hook into your podfile to automate setting the correct Swift versions. This is largely untested, and I'm not sure it's a good solution, but it seems to work:
-
-```
-post_install do |installer|
-    installer.pods_project.targets.each do |target|
-        if ['SomeTarget-iOS', 'SomeTarget-watchOS'].include? "#{target}"
-            print "Setting #{target}'s SWIFT_VERSION to 4.0\n"
-            target.build_configurations.each do |config|
-                config.build_settings['SWIFT_VERSION'] = '4.0'
-            end
-        else
-            print "Setting #{target}'s SWIFT_VERSION to Undefined (Xcode will automatically resolve)\n"
-            target.build_configurations.each do |config|
-                config.build_settings.delete('SWIFT_VERSION')
-            end
-        end
-    end
-
-    print "Setting the default SWIFT_VERSION to 3.2\n"
-    installer.pods_project.build_configurations.each do |config|
-        config.build_settings['SWIFT_VERSION'] = '3.2'
-    end
-end
-```
-
-You can adjust that to suit your needs of course.
+Then run `pod install`. For details of the installation and usage of CocoaPods, visit [it's official web site][cocoapods].
 
 ### [Swift Package Manager][swiftpm]
 
 Add the following entry to your package's dependencies:
 
 ```
-.Package(url: "https://github.com/DaveWoodCom/XCGLogger.git", majorVersion: 6)
+.Package(url: "https://github.com/DaveWoodCom/XCGLogger.git", majorVersion: 5)
 ```	
 
 ### Backwards Compatibility
 
 Use:
-* XCGLogger version [6.0.4][xcglogger-6.0.4] for Swift 4.1
-* XCGLogger version [6.0.2][xcglogger-6.0.2] for Swift 4.0
-* XCGLogger version [5.0.5][xcglogger-5.0.5] for Swift 3.0-3.2
+* XCGLogger version [5.0.1][xcglogger-5.0.1] for Swift 3.0-3.1
 * XCGLogger version [3.6.0][xcglogger-3.6.0] for Swift 2.3
 * XCGLogger version [3.5.3][xcglogger-3.5.3] for Swift 2.2
 * XCGLogger version [3.2][xcglogger-3.2] for Swift 2.0-2.1
@@ -128,7 +97,7 @@ Use:
 
 _This quick start method is intended just to get you up and running with the logger. You should however use the [advanced usage below](#advanced-usage-recommended) to get the most out of this library._
 
-Add the XCGLogger project as a subproject to your project, and add the appropriate library as a dependency of your target(s).
+Add the XCGLogger project as a subproject to your project, and add the appropriate library as a dependancy of your target(s).
 Under the `General` tab of your target, add `XCGLogger.framework` and `ObjcExceptionBridging.framework` to the `Embedded Binaries` section.
 
 Then, in each source file:
@@ -173,7 +142,7 @@ log.error("An error occurred, but it's recoverable, just info about what happene
 log.severe("A severe error occurred, we are likely about to crash now")
 ```
 
-The different methods set the log level of the message. XCGLogger will only print messages with a log level that is greater to or equal to its current log level setting. So a logger with a level of `.error` will only output log messages with a level of `.error`, or `.severe`.
+The different methods set the log level of the message. XCGLogger will only print messages with a log level that is greater to or equal to it's current log level setting. So a logger with a level of `.error` will only output log messages with a level of `.error`, or `.severe`.
 
 ## Advanced Usage (Recommended)
 
@@ -191,7 +160,7 @@ let log = XCGLogger(identifier: "advancedLogger", includeDefaultDestinations: fa
 let systemDestination = AppleSystemLogDestination(identifier: "advancedLogger.systemDestination")
 
 // Optionally set some configuration options
-systemDestination.outputLevel = .debug
+systemDestination.outputLevel = .Debug
 systemDestination.showLogIdentifier = false
 systemDestination.showFunctionName = true
 systemDestination.showThreadName = true
@@ -207,7 +176,7 @@ log.add(destination: systemDestination)
 let fileDestination = FileDestination(writeToFile: "/path/to/file", identifier: "advancedLogger.fileDestination")
 
 // Optionally set some configuration options
-fileDestination.outputLevel = .debug
+fileDestination.outputLevel = .Debug
 fileDestination.showLogIdentifier = false
 fileDestination.showFunctionName = true
 fileDestination.showThreadName = true
@@ -390,7 +359,7 @@ log.dateFormatter = dateFormatter
 
 ### Enhancing Log Messages With Colour
 
-XCGLogger supports adding formatting codes to your log messages to enable colour in various places. The original option was to use the [XcodeColors plug-in][XcodeColors]. However, Xcode (as of version 8) no longer officially supports plug-ins. You can still view your logs in colour, just not in Xcode at the moment. You can use the ANSI colour support to add colour to your fileDestination objects and view your logs via a terminal window. This gives you some extra options such as adding Bold, Italics, or (please don't) Blinking!
+XCGLogger supports adding formatting codes to your log messages to enable colour in various places. The original option was to use the [XcodeColors plug-in][XcodeColors]. However, Xcode 8 no longer officially supports plug-ins. You can still view your logs in colour, just not in Xcode 8 at the moment ([see note below](#restore-plug-in-support)). You can still use Xcode 7 if desired (after adding the Swift 3 toolchain), or you can use the new ANSI colour support to add colour to your fileDestination objects and view your logs via a terminal window. This gives you some extra options such as adding Bold, Italics, or (please don't) Blinking!
 
 Once enabled, each log level can have its own colour. These colours can be customized as desired. If using multiple loggers, you could alternatively set each logger to its own colour.
 
@@ -432,7 +401,7 @@ You can set any number of options up in a similar fashion. See the updated iOSDe
 
 By default, the supplied log destinations will process the logs on the thread they're called on. This is to ensure the log message is displayed immediately when debugging an application. You can add a breakpoint immediately after a log call and see the results when the breakpoint hits.
 
-However, if you're not actively debugging the application, processing the logs on the current thread can introduce a performance hit. You can now specify a destination process its logs on a dispatch queue of your choice (or even use a default supplied one).
+However, if you're not actively debugging the application, processing the logs on the current thread can introduce a performance hit. You can now specify a destination process it's logs on a dispatch queue of your choice (or even use a default supplied one).
 
 ```Swift
 fileDestination.logQueue = XCGLogger.logQueue
@@ -494,23 +463,61 @@ XCGLogger is the best logger available for Swift because of the contributions fr
 2. Report issues/bugs you find.
 3. Suggest features.
 4. Submit pull requests.
-5. Download and install one of my apps: [https://www.cerebralgardens.com/apps/][cerebral-gardens-apps] Try my newest app: [All the Rings][all-the-rings].
-6. You can visit my [Patreon page] (patreon) and contribute financially.
 
 **Note**: when submitting a pull request, please use lots of small commits verses one huge commit. It makes it much easier to merge in when there are several pull requests that need to be combined for a new version.
 
-<!-- Removed these since plug-ins seem to be gone for good now
 ## Third Party Tools That Work With XCGLogger
 
-**Note**: These plug-ins no longer 'officially' work in Xcode. File a [bug report](https://openradar.appspot.com/27447585) if you'd like to see plug-ins return to Xcode.
+**Note**: These plug-ins no longer 'officially' work in Xcode 8. File a [bug report](http://openradar.appspot.com/27447585) if you'd like to see plug-ins return to Xcode. See [below](#xcode_8_tips) for a workaround...
 
 [**XcodeColors:**][XcodeColors] Enable colour in the Xcode console
 <br />
 [**KZLinkedConsole:**][KZLinkedConsole] Link from a log line directly to the code that produced it
 
-**Note**: These may not yet work with the Swift 4 version of XCGLogger.
+**Note**: These may not yet work with the Swift 3 version of XCGLogger.
 
 [**XCGLoggerNSLoggerConnector:**][XCGLoggerNSLoggerConnector] Send your logs to [NSLogger][NSLogger]
+
+## Xcode 8 Tips
+
+### Restore Plug-In Support
+
+One of the biggest issues you'll notice when using Xcode 8, is that by default it will no longer load plug-ins. Personally, I really like the benefits the plug-ins add to Xcode, especially XcodeColors. With so many other frameworks, or even Xcode itself spewing messages into the debug console, it's really helpful to be able to have your logs stand out with colour. It is currently possible to re-enable plug-ins in Xcode 8. If you do so, you'll be able to use the new `XcodeColorsLogFormatter` class to colour your log messages again. See the demo apps for example code.
+
+**Be Warned**: If you follow these instructions to re-enable plug-ins, there could be unforeseen consequences. I would definitely only do this on a development machine, with the assumption that you have another machine (or at least an unmodified version of Xcode) to do your App Store/Distribution builds. **Do not** attempt to upload a binary to Apple that was built with a modified version of Xcode. **I take no responsibility for anything that happens if you follow these instructions. You have been warned**.
+
+Now, assuming you've read the above warning, and you have a development only machine, and you really want to use your awesome plug-ins, here's my recommended method to re-enable plug-ins.
+
+1. Clone the [unsign](https://github.com/steakknife/unsign) repository.
+2. Build it following their dead-simple instructions (`make`).
+3. Close Xcode if it's open.
+4. In your favourite shell/terminal, execute the following commands (may need to be root, or just `sudo`):
+
+
+	`cd /Applications/Xcode.app/Contents/MacOS` *Substitute another Xcode path if you like*
+	
+	`/path/to/unsign Xcode` *Creates a new `Xcode.unsigned` binary*
+	
+	`mv Xcode Xcode.signed` *Move the original file*
+	
+	`ln -sf Xcode.unsigned Xcode` *Link the unsigned version to the original filename*
+
+5. Launch Xcode and use your favourite plug-ins. You may have to reauthorize access to your keychain, but it should be a one time task.
+6. You can flip back and forth between the signed and unsigned versions by repeating the `ln -sf Xcode.unsigned Xcode` command, just changing `.unsigned` to `.signed` etc.
+7. Do not use this version of Xcode to submit apps!
+8. Pray Apple doesn't disable this workaround.
+9. File a radar requesting official plug-in support again. You can dup this [radar](http://openradar.appspot.com/27447585).
+
+Thanks to [@inket](https://github.com/inket/update_xcode_plugins) and [@steakknife](https://github.com/steakknife/unsign) for providing the knowledge and tools for this tip!
+
+<!-- This tip no longer works as of macOS 10.12.4, it appears to disable all logs, on iOS now. 
+-- ### Disable Xcode's Log Noise
+-- 
+-- For some reason, the simulators in the final version of Xcode 8 are printing lots of their own debug messages to the console. These messages make reading your own debug logs cumbersome. You can prevent those logs from being displayed by adding the environment variable `OS_ACTIVITY_MODE` to your debug scheme, and setting the value to `disable`.
+-- 
+-- <img src="https://raw.githubusercontent.com/DaveWoodCom/XCGLogger/swift_3.0/ReadMeImages/OSActivityMode.png" alt="Environment Variable" style="width: 690px; height: 401px;" />
+-- 
+-- Thanks to [@rustyshelf](https://twitter.com/rustyshelf/status/775505191160328194) and [@bersaelor](https://twitter.com/bersaelor/status/776317530549919744) for this tip!
 -->
 
 ## To Do
@@ -522,19 +529,20 @@ XCGLogger is the best logger available for Swift because of the contributions fr
 
 ## More
 
-If you find this library helpful, you'll definitely find this other tool helpful:
+If you find this library helpful, you'll definitely find these other tools helpful:
 
-Watchdog: https://watchdogforxcode.com/
+Watchdog: http://watchdogforxcode.com/  
+Slender: http://martiancraft.com/products/slender  
+Briefs: http://giveabrief.com/  
 
 Also, please check out some of my other projects:
 
-All the Rings: [App Store](https://itunes.apple.com/app/all-the-rings/id1186956966?pt=17255&ct=github&mt=8&at=11lMGu)
-Rudoku: [App Store](https://itunes.apple.com/app/rudoku/id965105321?pt=17255&ct=github&mt=8&at=11lMGu)
-TV Tune Up: https://www.cerebralgardens.com/tvtuneup
+Rudoku: [App Store](https://itunes.apple.com/app/apple-store/id965105321?pt=17255&ct=github&mt=8&at=11lMGu)  
+TV Tune Up: https://www.cerebralgardens.com/tvtuneup  
 
 ### Change Log
 
-The change log is now in its own file: [CHANGELOG.md](CHANGELOG.md)
+The change log is now in it's own file: [CHANGELOG.md](CHANGELOG.md)
 
 [xcglogger-logo]: https://github.com/DaveWoodCom/XCGLogger/raw/master/ReadMeImages/XCGLoggerLogo_326x150.png
 [swift.org]: https://swift.org/
@@ -545,20 +553,17 @@ The change log is now in its own file: [CHANGELOG.md](CHANGELOG.md)
 [cocoapods-xcglogger]: https://cocoapods.org/pods/XCGLogger
 [carthage]: https://github.com/Carthage/Carthage
 [cerebral-gardens]: https://www.cerebralgardens.com/
-[cerebral-gardens-apps]: https://www.cerebralgardens.com/apps/
-[all-the-rings]: https://alltherings.fit/?s=GH3
 [twitter-davewoodx]: https://twitter.com/davewoodx
 [github-xcglogger]: https://github.com/DaveWoodCom/XCGLogger
-[stackoverflow]: https://stackoverflow.com/questions/tagged/xcglogger
-[patreon]: https://www.patreon.com/DaveWoodX
+[stackoverflow]: http://stackoverflow.com/questions/tagged/xcglogger
 
-[badge-language]: https://img.shields.io/badge/Swift-1.x%20%7C%202.x%20%7C%203.x%20%7C%204.x-orange.svg?style=flat
+[badge-language]: https://img.shields.io/badge/Swift-1.x%20%7C%202.x%20%7C%203.x-orange.svg?style=flat
 [badge-platforms]: https://img.shields.io/badge/Platforms-macOS%20%7C%20iOS%20%7C%20tvOS%20%7C%20watchOS-lightgray.svg?style=flat
 [badge-license]: https://img.shields.io/badge/License-MIT-lightgrey.svg?style=flat
 [badge-travis]: https://img.shields.io/travis/DaveWoodCom/XCGLogger/master.svg?style=flat
-[badge-swiftpm]: https://img.shields.io/badge/Swift_Package_Manager-v6.0.4-64a6dd.svg?style=flat
+[badge-swiftpm]: https://img.shields.io/badge/Swift_Package_Manager-v5.0.1-64a6dd.svg?style=flat
 [badge-cocoapods]: https://img.shields.io/cocoapods/v/XCGLogger.svg?style=flat
-[badge-carthage]: https://img.shields.io/badge/Carthage-v6.0.4-64a6dd.svg?style=flat
+[badge-carthage]: https://img.shields.io/badge/Carthage-v5.0.1-64a6dd.svg?style=flat
 
 [badge-sponsors]: https://img.shields.io/badge/Sponsors-Cerebral%20Gardens-orange.svg?style=flat
 [badge-twitter]: https://img.shields.io/twitter/follow/DaveWoodX.svg?style=social
@@ -570,9 +575,7 @@ The change log is now in its own file: [CHANGELOG.md](CHANGELOG.md)
 [Firelog]: http://jogabo.github.io/firelog/
 [Firebase]: https://www.firebase.com/
 
-[xcglogger-6.0.4]: https://github.com/DaveWoodCom/XCGLogger/releases/tag/6.0.4
-[xcglogger-6.0.2]: https://github.com/DaveWoodCom/XCGLogger/releases/tag/6.0.2
-[xcglogger-5.0.5]: https://github.com/DaveWoodCom/XCGLogger/releases/tag/5.0.5
+[xcglogger-5.0.1]: https://github.com/DaveWoodCom/XCGLogger/releases/tag/5.0.1
 [xcglogger-3.6.0]: https://github.com/DaveWoodCom/XCGLogger/releases/tag/3.6.0
 [xcglogger-3.5.3]: https://github.com/DaveWoodCom/XCGLogger/releases/tag/3.5.3
 [xcglogger-3.2]: https://github.com/DaveWoodCom/XCGLogger/releases/tag/3.2.0

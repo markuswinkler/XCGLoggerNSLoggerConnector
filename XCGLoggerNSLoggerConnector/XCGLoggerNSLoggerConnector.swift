@@ -65,14 +65,31 @@ public class XCGNSLoggerLogDestination: BaseDestination {
         default:
             break
         }
-        
+
+        let domain = logDetails.userInfo[Constants.userInfoKeyDomain] as? String ?? logDetails.level.description
+        if let image = logDetails.userInfo[Constants.userInfoKeyImage] as? UIImage {
+            LogImageDataF(logDetails.fileName, Int32(logDetails.lineNumber), logDetails.functionName, domain, convertLogLevel(logDetails.level), Int32(image.size.width), Int32(image.size.height), UIImagePNGRepresentation(image))
+        }
+
         if addInlineDebugInfo {
-            LogMessageF_va(logDetails.fileName, Int32(logDetails.lineNumber), logDetails.functionName, logDetails.level.description, Int32(convertLogLevel(logDetails.level)), "[\(NSString(string: logDetails.fileName).lastPathComponent):\(logDetails.lineNumber)] -> \(logDetails.functionName) : \(logDetails.message)", getVaList([]))
+            LogMessageF_va(logDetails.fileName, Int32(logDetails.lineNumber), logDetails.functionName, domain, Int32(convertLogLevel(logDetails.level)), "[\(NSString(string: logDetails.fileName).lastPathComponent):\(logDetails.lineNumber)] -> \(logDetails.functionName) : \(logDetails.message)", getVaList([]))
         } else {
-            LogMessageF_va(logDetails.fileName, Int32(logDetails.lineNumber), logDetails.functionName, logDetails.level.description, Int32(convertLogLevel(logDetails.level)), logDetails.message, getVaList([]))
+            LogMessageF_va(logDetails.fileName, Int32(logDetails.lineNumber), logDetails.functionName, domain, Int32(convertLogLevel(logDetails.level)), logDetails.message, getVaList([]))
         }
         
     }
+    
+    public struct Constants {
+        /// Prefix identifier to use for all other identifiers
+        public static let baseIdentifier = "xcglogger.nslogger"
+        
+        /// UserInfo Key - domain
+        public static let userInfoKeyDomain = "\(baseIdentifier).domain"
+        
+        /// UserInfo Key - image
+        public static let userInfoKeyImage = "\(baseIdentifier).image"
+    }
+
 }
 
 public extension XCGLogger {

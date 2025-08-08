@@ -48,7 +48,6 @@ public class XCGNSLoggerLogDestination: BaseDestination {
         case .none:
             return 3
         }
-        let x:FileDestination!
     }
     
 	public init(owner: XCGLogger, identifier: String, addInlineDebugInfo: Bool = false, outputLevel: XCGLogger.Level = .debug) {
